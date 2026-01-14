@@ -3,7 +3,7 @@
 
 #include "color.h"
 
-// 6 базовых фильтров
+// 6 базовых фильтров, нужно добавить еще 2
 void crop_filter(Image* image, int new_width, int new_height);
 void grayscale_filter(Image* image);
 void negative_filter(Image* image);
