@@ -1,5 +1,5 @@
 // gcc bmp.c filters.c main.c color.c -o main.exe
-// ./main.exe Lena.bmp output.bmp -crop 600 600
+// ./main.exe Lena.bmp output.bmp -crop 1000 1000
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
