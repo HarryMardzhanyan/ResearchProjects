@@ -10,6 +10,7 @@ void negative_filter(Image* image);
 void sharpening_filter(Image* image);
 void edge_detection_filter(Image* image, float threshold);
 void gaussian_blur_filter(Image* image, float sigma);
+void vignette_filter(Image* image, float strength);
 
 // Вспомогательные функции
 Pixel get_pixel_clamped(Image* image, int x, int y);

@@ -8,16 +8,19 @@
 
 // Функция для вывода справки
 void print_help() {
-    printf("  image_craft input.bmp output.bmp [-фильтр1 [параметры...]] [-фильтр2 [параметры...]] ...\n");
-    printf("\nДоступные фильтры:\n");
-    printf("  -crop width height    Обрезать изображение\n");
-    printf("  -gs                   Преобразовать в оттенки серого\n");
-    printf("  -neg                  Создать негатив\n");
-    printf("  -sharp                Повысить резкость\n");
-    printf("  -edge threshold       Обнаружить границы\n");
-    printf("  -blur sigma           Применить гауссово размытие\n");
-    printf("\nПример:\n");
-    printf("  image_craft input.bmp output.bmp -crop 800 600 -gs -blur 0.5\n");
+    printf("\nREFERENCE\n");
+    printf("Before running, compile the program using: gcc bmp.c filters.c main.c color.c -o main.exe\n");
+    printf("  main.exe Lena.bmp output.bmp [-filter1 [parameters...]] [-filter2 [parameters...]] ...\n");
+    printf("\nAvailable filters:\n");
+    printf("  -crop width height    Crop image\n");
+    printf("  -gs                   Convert to grayscale\n");
+    printf("  -neg                  Create negativity\n");
+    printf("  -sharp                Increase sharpness\n");
+    printf("  -edge threshold       Highlighting the boundaries\n");
+    printf("  -blur sigma           Apply Gaussian Blur\n");
+    printf("  -vignette strength    Apply vignette (strength from 0 to 1)\n");
+    printf("\nExample:\n");
+    printf("  ./main.exe Lena.bmp output.bmp -crop 800 600 -gs -blur 0.5\n");
 }
 
 // Главная функция
@@ -67,6 +70,21 @@ int main(int argc, char* argv[]) {
             printf("Applying sharpening filter\n");
             sharpening_filter(image);
             i += 1;
+        }
+        else if (strcmp(argv[i], "-vignette") == 0) {
+            if (i + 1 < argc) {
+                float strength = atof(argv[i + 1]);
+                if (strength < 0.0f) strength = 0.0f;
+                if (strength > 1.0f) strength = 1.0f;
+                
+                printf("Applying vignette (strength: %.2f)\n", strength);
+                vignette_filter(image, strength);
+                i += 2;
+            } else {
+                printf("Error: -vignette requires strength parameter from 0 to 1\n");
+                free_image(image);
+                return 1;
+            }
         }
         else if (strcmp(argv[i], "-edge") == 0) {
             if (i + 1 < argc) {

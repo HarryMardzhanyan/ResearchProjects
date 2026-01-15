@@ -176,6 +176,54 @@ void gaussian_blur_filter(Image* image, float sigma) {
     free(temp_image);
 }
 
+void vignette_filter(Image* image, float strength) {
+    // Параметры по умолчанию, если переданы некорректные значения
+    if (strength <= 0) strength = 0.8f;
+    float inner_radius = 0.01f;
+    
+    // Центр изображения
+    float center_x = image->width / 2.0f;
+    float center_y = image->height / 2.0f;
+    
+    // Максимальное расстояние от центра до угла
+    float max_distance = sqrtf(center_x * center_x + center_y * center_y);
+    
+    for (int y = 0; y < image->height; y++) {
+        for (int x = 0; x < image->width; x++) {
+            // Расстояние от текущего пикселя до центра
+            float dx = x - center_x;
+            float dy = y - center_y;
+            float distance = sqrtf(dx * dx + dy * dy);
+            
+            // Нормализованное расстояние [0, 1]
+            float normalized_distance = distance / max_distance;
+            
+            // Коэффициент затемнения (1.0 - нет затемнения, 0.0 - полное затемнение)
+            float darken_factor;
+            
+            if (normalized_distance <= inner_radius) {
+                // Внутренняя область без затемнения
+                darken_factor = 1.0f;
+            } else {
+                // Внешняя область с плавным затемнением
+                float t = (normalized_distance - inner_radius) / (1.0f - inner_radius);
+                // Используем квадратичную или квадратный корень для плавности
+                darken_factor = 1.0f - strength * t * t - 0.1; // Квадратичное затемнение
+                
+                // Ограничиваем коэффициент
+                if (darken_factor < 0.0f) darken_factor = 0.0f;
+            }
+            
+            // Применяем затемнение к пикселю
+            Pixel* pixel = &image->data[y * image->width + x];
+            
+            pixel->red = (uint8_t)(pixel->red * darken_factor);
+            pixel->green = (uint8_t)(pixel->green * darken_factor);
+            pixel->blue = (uint8_t)(pixel->blue * darken_factor);
+        }
+    }
+}
+
 // Общая функция для применения матричного фильтра 3x3
 void apply_matrix_filter(Image* image, float kernel[3][3]) {
     Image* temp_image = (Image*)malloc(sizeof(Image));

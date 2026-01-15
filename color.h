@@ -19,7 +19,6 @@ typedef struct {
 
 // Функции для работы с цветом
 Pixel create_pixel(uint8_t r, uint8_t g, uint8_t b);
-float pixel_to_float(Pixel p);
 Pixel float_to_pixel(float r, float g, float b);
 
 #endif

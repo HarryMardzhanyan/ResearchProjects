@@ -9,11 +9,6 @@ Pixel create_pixel(uint8_t r, uint8_t g, uint8_t b) {
     return pixel;
 }
 
-// Конвертация пикселя в значения с плавающей точкой [0, 1]
-float pixel_to_float_component(uint8_t component) {
-    return component / 255.0f;
-}
-
 Pixel float_to_pixel(float r, float g, float b) {
     // Ограничение значений в диапазоне [0, 1]
     r = fmaxf(0.0f, fminf(1.0f, r));
