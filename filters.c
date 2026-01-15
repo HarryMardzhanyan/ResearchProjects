@@ -224,6 +224,72 @@ void vignette_filter(Image* image, float strength) {
     }
 }
 
+void zoom_blur_filter(Image* image, float strength) {
+    // Ограничиваем strength от 0 до 1
+    if (strength < 0.0f) strength = 0.0f;
+    if (strength > 1.0f) strength = 1.0f;
+    
+    // Находим центр изображения
+    float center_x = image->width / 2.0f;
+    float center_y = image->height / 2.0f;
+    
+    // Создаем временный буфер для результата
+    Pixel* temp_data = (Pixel*)malloc(image->width * image->height * sizeof(Pixel));
+    if (!temp_data) return;
+    
+    // Коэффициент для радиуса размытия (чем больше strength, тем больше радиус)
+    float max_radius = 50.0f * strength;
+    
+    for (int y = 0; y < image->height; y++) {
+        for (int x = 0; x < image->width; x++) {
+            float dx = x - center_x;
+            float dy = y - center_y;
+            float distance = sqrtf(dx*dx + dy*dy);
+            
+            // Количество сэмплов зависит от расстояния от центра
+            int samples = 5 + (int)(distance * 0.1f * strength);
+            samples = (samples < 3) ? 3 : samples;
+            
+            float total_r = 0, total_g = 0, total_b = 0;
+            
+            for (int i = 0; i < samples; i++) {
+                // Смещение зависит от distance и strength
+                float factor = 1.0f + (max_radius * i / samples);
+                factor *= (distance / (image->width/2)) * strength;
+                
+                // Вычисляем смещенные координаты к центру
+                float offset_x = dx * (1.0f - factor);
+                float offset_y = dy * (1.0f - factor);
+                
+                int sample_x = (int)(center_x + offset_x);
+                int sample_y = (int)(center_y + offset_y);
+                
+                // Проверяем границы
+                if (sample_x < 0) sample_x = 0;
+                if (sample_x >= image->width) sample_x = image->width - 1;
+                if (sample_y < 0) sample_y = 0;
+                if (sample_y >= image->height) sample_y = image->height - 1;
+                
+                // Берем цвет из исходного изображения
+                Pixel sample = image->data[sample_y * image->width + sample_x];
+                total_r += sample.red;
+                total_g += sample.green;
+                total_b += sample.blue;
+            }
+            
+            // Усредняем значения
+            Pixel* result = &temp_data[y * image->width + x];
+            result->red = (unsigned char)(total_r / samples);
+            result->green = (unsigned char)(total_g / samples);
+            result->blue = (unsigned char)(total_b / samples);
+        }
+    }
+    
+    // Копируем результат обратно
+    memcpy(image->data, temp_data, image->width * image->height * sizeof(Pixel));
+    free(temp_data);
+}
+
 // Общая функция для применения матричного фильтра 3x3
 void apply_matrix_filter(Image* image, float kernel[3][3]) {
     Image* temp_image = (Image*)malloc(sizeof(Image));

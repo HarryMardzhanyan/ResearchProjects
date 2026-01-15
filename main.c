@@ -19,6 +19,7 @@ void print_help() {
     printf("  -edge threshold       Highlighting the boundaries\n");
     printf("  -blur sigma           Apply Gaussian Blur\n");
     printf("  -vignette strength    Apply vignette (strength from 0 to 1)\n");
+    printf("  -zoomblur strength  Apply zoom blur effect (0-1)\n");
     printf("\nExample:\n");
     printf("  ./main.exe Lena.bmp output.bmp -crop 800 600 -gs -blur 0.5\n");
 }
@@ -106,6 +107,20 @@ int main(int argc, char* argv[]) {
                 i += 2;
             } else {
                 fprintf(stderr, "Error: -blur requires sigma parameter\n");
+                free_image(image);
+                return 1;
+            }
+        }
+        else if (strcmp(argv[i], "-zoomblur") == 0) {
+            if (i + 1 < argc) {
+                float strength = atof(argv[i + 1]);
+                if (strength < 0.0f) strength = 0.0f;
+                if (strength > 1.0f) strength = 1.0f;
+                printf("Applying zoom blur filter (strength: %.2f)\n", strength);
+                zoom_blur_filter(image, strength);
+                i += 2;
+            } else {
+                fprintf(stderr, "Error: -zoomblur requires strength parameter (0-1)\n");
                 free_image(image);
                 return 1;
             }
