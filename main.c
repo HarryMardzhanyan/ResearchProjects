@@ -19,7 +19,8 @@ void print_help() {
     printf("  -edge threshold       Highlighting the boundaries\n");
     printf("  -blur sigma           Apply Gaussian Blur\n");
     printf("  -vignette strength    Apply vignette (strength from 0 to 1)\n");
-    printf("  -zoomblur strength  Apply zoom blur effect (0-1)\n");
+    printf("  -zoomblur strength    Apply zoom blur (strength from 0 to 1)\n");
+    printf("  -med window           Apply median filter (window size is an odd number, minimum is 3)\n");
     printf("\nExample:\n");
     printf("  ./main.exe Lena.bmp output.bmp -crop 800 600 -gs -blur 0.5\n");
 }
@@ -120,7 +121,19 @@ int main(int argc, char* argv[]) {
                 zoom_blur_filter(image, strength);
                 i += 2;
             } else {
-                fprintf(stderr, "Error: -zoomblur requires strength parameter (0-1)\n");
+                fprintf(stderr, "Error: -zoomblur requires strength parameter from 0 to 1\n");
+                free_image(image);
+                return 1;
+            }
+        }
+        else if (strcmp(argv[i], "-med") == 0) {
+            if (i + 1 < argc) {
+                float window = atof(argv[i + 1]);
+                printf("Applying median filter (window: %.2f)\n", window);
+                median_filter(image, window);
+                i += 2;
+            } else {
+                fprintf(stderr, "Error: -med requires window parameter\n");
                 free_image(image);
                 return 1;
             }

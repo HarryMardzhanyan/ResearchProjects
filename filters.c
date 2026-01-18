@@ -176,6 +176,7 @@ void gaussian_blur_filter(Image* image, float sigma) {
     free(temp_image);
 }
 
+// 7. Фильтр виньетки (Vignette)
 void vignette_filter(Image* image, float strength) {
     // Параметры по умолчанию, если переданы некорректные значения
     if (strength <= 0) strength = 0.8f;
@@ -224,6 +225,7 @@ void vignette_filter(Image* image, float strength) {
     }
 }
 
+// 8. Фильтр приближения и размытия (Zoom Blur)
 void zoom_blur_filter(Image* image, float strength) {
     // Ограничиваем strength от 0 до 1
     if (strength < 0.0f) strength = 0.0f;
@@ -288,6 +290,103 @@ void zoom_blur_filter(Image* image, float strength) {
     // Копируем результат обратно
     memcpy(image->data, temp_data, image->width * image->height * sizeof(Pixel));
     free(temp_data);
+}
+
+// 9. Медианный фильтр (Median)
+void median_filter(Image* image, int window_size) {
+    if (window_size <= 0) window_size = 3;
+    if (window_size % 2 == 0) window_size++;
+    
+    int radius = window_size / 2;
+    int window_area = window_size * window_size;
+    
+    // Создаем гистограммы для каждого канала
+    int hist_r[256] = {0};
+    int hist_g[256] = {0};
+    int hist_b[256] = {0};
+    
+    Image* temp_image = (Image*)malloc(sizeof(Image));
+    temp_image->width = image->width;
+    temp_image->height = image->height;
+    temp_image->data = (Pixel*)malloc(image->width * image->height * sizeof(Pixel));
+    
+    for (int y = 0; y < image->height; y++) {
+        // Сбрасываем гистограммы для каждой строки
+        memset(hist_r, 0, sizeof(hist_r));
+        memset(hist_g, 0, sizeof(hist_g));
+        memset(hist_b, 0, sizeof(hist_b));
+        
+        // Инициализируем гистограммы для первого окна в строке
+        for (int wy = -radius; wy <= radius; wy++) {
+            for (int wx = -radius; wx <= radius; wx++) {
+                Pixel p = get_pixel_clamped(image, wx, y + wy);
+                hist_r[p.red]++;
+                hist_g[p.green]++;
+                hist_b[p.blue]++;
+            }
+        }
+        
+        for (int x = 0; x < image->width; x++) {
+            // Находим медиану из гистограмм
+            Pixel result;
+            
+            // Медиана для красного канала
+            int count = 0;
+            for (int i = 0; i < 256; i++) {
+                count += hist_r[i];
+                if (count > window_area / 2) {
+                    result.red = i;
+                    break;
+                }
+            }
+            
+            // Медиана для зеленого канала
+            count = 0;
+            for (int i = 0; i < 256; i++) {
+                count += hist_g[i];
+                if (count > window_area / 2) {
+                    result.green = i;
+                    break;
+                }
+            }
+            
+            // Медиана для синего канала
+            count = 0;
+            for (int i = 0; i < 256; i++) {
+                count += hist_b[i];
+                if (count > window_area / 2) {
+                    result.blue = i;
+                    break;
+                }
+            }
+            
+            temp_image->data[y * image->width + x] = result;
+            
+            // Обновляем гистограммы для следующего пикселя
+            if (x + 1 < image->width) {
+                // Удаляем левый столбец
+                for (int wy = -radius; wy <= radius; wy++) {
+                    Pixel p_old = get_pixel_clamped(image, x - radius, y + wy);
+                    hist_r[p_old.red]--;
+                    hist_g[p_old.green]--;
+                    hist_b[p_old.blue]--;
+                }
+                
+                // Добавляем правый столбец
+                for (int wy = -radius; wy <= radius; wy++) {
+                    Pixel p_new = get_pixel_clamped(image, x + radius + 1, y + wy);
+                    hist_r[p_new.red]++;
+                    hist_g[p_new.green]++;
+                    hist_b[p_new.blue]++;
+                }
+            }
+        }
+    }
+
+    
+    memcpy(image->data, temp_image->data, image->width * image->height * sizeof(Pixel));
+    free(temp_image->data);
+    free(temp_image);
 }
 
 // Общая функция для применения матричного фильтра 3x3
